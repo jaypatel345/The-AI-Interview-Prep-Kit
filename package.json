@@ -1,0 +1,13 @@
+{
+  "name": "ai-interview-prep-kit",
+  "private": true,
+  "description": "Root entry point. The batch command in Section 9 runs from a clean clone: npm install && npm run evaluate -- --input examples/cases.json --output kits.json",
+  "scripts": {
+    "postinstall": "npm --prefix backend install",
+    "evaluate": "backend/node_modules/.bin/tsx backend/src/evaluate.ts",
+    "test": "npm --prefix backend test && npm --prefix frontend test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

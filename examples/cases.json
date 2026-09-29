@@ -1,0 +1,10 @@
+[
+  { "id": "gitlab-backend", "company_url": "https://about.gitlab.com/", "days": 5,
+    "jd": "Senior Backend Engineer, Ruby on Rails\n\nRequirements:\n- 5+ years of professional experience with Ruby on Rails\n- Strong PostgreSQL and query optimisation skills\n- Experience working asynchronously in a remote team\n- Ability to mentor other engineers\n\nNice to have:\n- Experience with Go\n- Kubernetes knowledge is a plus" },
+  { "id": "posthog-fullstack", "company_url": "https://posthog.com/", "days": 3,
+    "jd": "Full Stack Engineer\n\nWhat you'll need:\n- Strong TypeScript and React\n- Python (Django) on the backend\n- You ship fast and own features end to end\n\nBonus points:\n- ClickHouse experience" },
+  { "id": "stub", "company_url": "https://example.com/", "days": 1,
+    "jd": "Frontend developer\nReact." },
+  { "id": "unreachable", "company_url": "https://this-domain-does-not-exist-9x7.com/", "days": 60,
+    "jd": "Data Engineer\n\nMust have: SQL, Airflow, and experience with data warehouses." }
+]
