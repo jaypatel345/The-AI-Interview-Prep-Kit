@@ -12,7 +12,7 @@ elsewhere, and a practice mode tracks what you have covered.
 | Backend | Node.js + Express, TypeScript | Preferred stack. |
 | Database | MongoDB (Mongoose) | Preferred stack; a kit is one document, which suits "save this section" updates. |
 | Scraping | `fetch` + `cheerio` | Sites are server-rendered enough for this; a headless browser would blow the time and memory budget. |
-| LLM | Google Gemini `gemini-2.5-flash` (free tier) via its OpenAI-compatible endpoint | Generous free tier. Any OpenAI-compatible provider works by changing 3 env vars (Groq example in `.env.example`). |
+| LLM | Google Gemini `gemini-3.8-flash` (free tier) via its OpenAI-compatible endpoint | Generous free tier. Any OpenAI-compatible provider works by changing 3 env vars (Groq example in `.env.example`). |
 | Validation | Zod | One schema validates requests, model output and the final kit. |
 
 ## Setup (local)
