@@ -46,10 +46,15 @@ Tests: `cd backend && npm test` (schedule allocation, coverage loop, schema vali
 against a local test site, robots.txt, URL safety, and a full pipeline run with a fake model). `cd frontend && npm test` (edit/regenerate state, weak spots).
 
 ## Deployment
-- **Database:** MongoDB Atlas free cluster. Allow access from the backend host.
-- **Backend:** Render free web service, root `backend`, build `npm install && npm run build`, start `npm start`. Env vars: everything
-  in `backend/.env.example`, with `NODE_ENV=production` and `FRONTEND_ORIGIN=https://<your-vercel-app>.vercel.app`.
-- **Frontend:** Vercel, root `frontend`, env `API_URL=https://<your-render-service>.onrender.com`.
+Order matters: the backend needs the database URL, and the frontend needs the backend URL.
+1. **Database:** MongoDB Atlas free (M0) cluster. Create a database user, and under Network Access allow
+   `0.0.0.0/0` (Render's free tier has no static egress IP). Copy the SRV connection string.
+2. **Backend:** Render > New > Blueprint, pointed at this repo: `render.yaml` sets the root directory, build and
+   start commands, and the health check. Render prompts for `MONGODB_URI`, `LLM_API_KEY` and `FRONTEND_ORIGIN`,
+   and generates `JWT_SECRET` itself. Leave `FRONTEND_ORIGIN` blank until step 3, then fill it in.
+3. **Frontend:** Vercel, root directory `frontend`, env `API_URL=https://<your-render-service>.onrender.com`.
+4. Go back to Render and set `FRONTEND_ORIGIN` to the exact Vercel URL, scheme included. The CSRF origin check
+   compares it literally, so a trailing slash or a `www.` difference rejects every write with `BAD_ORIGIN`.
 - Secrets live only in the host's env settings; `.env` is git-ignored. Each variable is documented in the `.env.example` files.
 - Free Render instances sleep when idle, so the first request after a pause can take ~30-50 s.
 
