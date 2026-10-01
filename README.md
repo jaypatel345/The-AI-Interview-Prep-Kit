@@ -38,6 +38,10 @@ Cases run 2 at a time (`EVAL_CONCURRENCY`) sharing one rate-limit pacer. A case 
 all (for example, the model is unavailable). An unreachable site or a missing hiring page still gives `ok`, with the gaps recorded in `notes`.
 Private and localhost URLs are allowed unless `NODE_ENV=production`, so cases served from `http://localhost:8099/...` work.
 
+Verified run: 4/4 example cases ok in 4m20s (the brief allows fifteen minutes for five), with zero uncovered
+must-have requirements and schedules of exactly 1, 3, 5 and 60 days. Note that the full `gemini-*-flash` models
+carry a 20-request-per-day free quota that a single case exhausts, which is why the default is a `-lite` model.
+
 Tests: `cd backend && npm test` (schedule allocation, coverage loop, schema validation, extraction grounding and priority, crawler
 against a local test site, robots.txt, URL safety, and a full pipeline run with a fake model). `cd frontend && npm test` (edit/regenerate state, weak spots).
 
@@ -103,7 +107,7 @@ Each question carries `origin: generated | edited | manual` and `pinned` (extens
 `generated` into `edited`; hand-written questions are `manual`. Regenerating a category replaces only questions that are
 `generated` and not pinned. The server returns *candidates only*; the client merges them in a reducer against its **latest** state,
 so an edit made while the request was in flight is still protected. Duplicates of kept questions are dropped (`lib/question-state.ts`, tested).
-Each section saves to its own endpoint (`PUT /questions`, `/flashcards`, `/brief`) and regenerating the brief or schedule writes only
+Questions and flashcards both reorder with buttons or Alt+Arrow keys. Each section saves to its own endpoint (`PUT /questions`, `/flashcards`, `/brief`) and regenerating the brief or schedule writes only
 that field, so no section can overwrite another. Edits are debounced (600 ms) and flushed if you navigate away; tab panels stay mounted.
 Regenerating a brief you edited asks for confirmation first.
 
