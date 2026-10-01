@@ -78,8 +78,20 @@ export async function extractRequirements(llm: LlmClient, jd: string): Promise<E
   }
   const firstLine = jd.split(/\r?\n/).map((l) => l.trim()).find(Boolean) ?? "";
   return {
-    company: out.company.trim(), title: out.title.trim() || firstLine.slice(0, 100), seniority: out.seniority.trim(), location: out.location.trim(),
+    company: blankIfPlaceholder(out.company), title: out.title.trim() || firstLine.slice(0, 100),
+    seniority: blankIfPlaceholder(out.seniority), location: blankIfPlaceholder(out.location),
     responsibilities: out.responsibilities.map((s) => s.trim()).filter(Boolean).slice(0, 15),
     requirements, dropped, thin: jd.trim().length < 300 || requirements.length < 3,
   };
+}
+
+/**
+ * The model is asked to return "" for a field the posting does not state, but it often writes
+ * "unknown" or "not specified" instead. Those are truthy, so they would win over the fallbacks
+ * further down the pipeline (site title, then hostname) and surface in the UI as "at unknown".
+ */
+const PLACEHOLDERS = new Set(["unknown", "n/a", "na", "none", "not stated", "not specified", "not given", "not mentioned", "unspecified", "-"]);
+function blankIfPlaceholder(v: string): string {
+  const t = v.trim();
+  return PLACEHOLDERS.has(t.toLowerCase().replace(/[.]$/, "")) ? "" : t;
 }

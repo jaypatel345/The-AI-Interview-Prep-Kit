@@ -32,8 +32,39 @@ export class PipelineError extends Error {
 export interface Research { ctx: GenContext; pages: ResearchPage[]; hiringPageUrl: string | null; discussion: Discussion[]; companyUrl: string }
 
 const hostName = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return ""; } };
-const nameFromHost = (h: string) => { const p = h.split(".")[0] || h; return p.charAt(0).toUpperCase() + p.slice(1); };
-const nameFromTitle = (t: string) => t.split(/\s[|\-–—:]\s/)[0].trim().slice(0, 60);
+/** Registrable label of a host: about.gitlab.com -> gitlab, posthog.com -> posthog, x.example.co.uk -> example. */
+const SECOND_LEVEL = new Set(["co", "com", "org", "net", "ac", "gov", "edu"]);
+export function brandFromHost(h: string): string {
+  const labels = h.split(".").filter(Boolean);
+  if (labels.length <= 1) return labels[0] ?? "";
+  let tld = labels.length - 1;                                  // drop the TLD
+  if (tld > 0 && SECOND_LEVEL.has(labels[tld - 1])) tld -= 1;   // and a second-level suffix like .co.uk
+  return labels[tld - 1] ?? labels[0];
+}
+const capitalise = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "");
+
+const titleParts = (t: string) => t.split(/\s[|\-–—:·]\s/).map((p) => p.trim()).filter(Boolean);
+const norm = (v: string) => v.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+/**
+ * A title segment that matches the domain is the company, whichever end of the title it sits at,
+ * and it carries the site's own casing (GitLab, PostHog). Returns "" when nothing agrees with the
+ * domain, so callers can fall back rather than name the company after whatever page we happened to
+ * fetch first: a hiring page titled "Using AI in the interview process" is not a company name.
+ */
+export function brandInTitle(title: string, brand: string): string {
+  if (!brand) return "";
+  return titleParts(title).find((p) => norm(p) === norm(brand))?.slice(0, 60) ?? "";
+}
+
+/** A homepage title reads "Company — tagline", so its FIRST segment is the company. */
+export function nameFromTitle(title: string): string {
+  return (titleParts(title)[0] ?? "").slice(0, 60);
+}
+
+/** localhost, an IP or a bare label tells us nothing about a company name. */
+const usableBrand = (h: string, brand: string) =>
+  !/^(localhost|\d+\.\d+\.\d+\.\d+|\[.*\])$/.test(h) && h.includes(".") ? brand : "";
 
 /**
  * The full path, used by both the web app and `npm run evaluate`:
@@ -60,7 +91,12 @@ export async function runPipeline(input: PipelineInput, progress: Progress, llm:
   else if (!crawl.hiringPageUrl) await warn(STEPS[1], "No hiring or interview-process page was found on the company site.");
   const pages = researchPages(crawl);
   const host = hostName(input.company_url);
-  const company = ex.company || (pages[0] ? nameFromTitle(pages[0].title) : "") || nameFromHost(host);
+  const brand = brandFromHost(host);
+  // Posting first; then a page title that agrees with the domain; then the domain itself. The homepage
+  // title is used only when the host cannot name a company (a site served from localhost, as the batch
+  // command's test sites are), because an arbitrary page title is a poor company name.
+  const branded = pages.map((p) => brandInTitle(p.title, brand)).find(Boolean) ?? "";
+  const company = ex.company || branded || capitalise(usableBrand(host, brand)) || (pages[0] ? nameFromTitle(pages[0].title) : "");
 
   // 3. Public discussion of how they interview.
   await progress(STEPS[2]);

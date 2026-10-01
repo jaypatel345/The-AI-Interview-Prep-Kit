@@ -56,6 +56,32 @@ describe("extractRequirements", () => {
     ]);
     expect(ex.dropped).toEqual(["Kubernetes"]);
   });
+  // The model writes "unknown" instead of "" for a field the posting does not state. Those strings are
+  // truthy, so they would beat the site-title and hostname fallbacks and show up as "Role at unknown".
+  it("blanks placeholder company, seniority and location so the site fallbacks can win", async () => {
+    const vague: LlmClient = {
+      json: async ({ schema }) => schema.parse({
+        company: "unknown", seniority: "Not specified", location: "N/A", title: "Backend Engineer",
+        requirements: [{ text: "Go", quote: "Go", kind: "technical", priority: "must" }],
+      }),
+    };
+    const ex = await extractRequirements(vague, "Backend Engineer\nWe use Go.");
+    expect(ex.company).toBe("");
+    expect(ex.seniority).toBe("");
+    expect(ex.location).toBe("");
+    expect(ex.title).toBe("Backend Engineer");
+  });
+  it("keeps a real company name", async () => {
+    const named: LlmClient = {
+      json: async ({ schema }) => schema.parse({
+        company: "GitLab", location: "Remote", title: "Backend Engineer",
+        requirements: [{ text: "Go", quote: "Go", kind: "technical", priority: "must" }],
+      }),
+    };
+    const ex = await extractRequirements(named, "Backend Engineer at GitLab\nWe use Go.");
+    expect(ex.company).toBe("GitLab");
+    expect(ex.location).toBe("Remote");
+  });
   it("marks a two-line stub as thin", async () => {
     const stub: LlmClient = { json: async ({ schema }) => schema.parse({ title: "Frontend dev", requirements: [{ text: "React", quote: "React", kind: "technical", priority: "must" }] }) };
     const ex = await extractRequirements(stub, "Frontend developer\nReact.");

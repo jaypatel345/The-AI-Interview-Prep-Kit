@@ -3,7 +3,7 @@ import { AddressInfo } from "net";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 vi.mock("./retrieval/discussion", () => ({ searchDiscussion: async () => ({ snippets: [], skipped: [], searched: ["test"] }) }));
-import { runPipeline } from "./pipeline";
+import { brandFromHost, brandInTitle, nameFromTitle, runPipeline } from "./pipeline";
 import { KitSchema } from "./kit-schema";
 import type { LlmClient } from "./llm";
 
@@ -68,5 +68,28 @@ describe("runPipeline", () => {
     expect(kit.source.pages_used).toEqual([]);
     expect(kit.company_brief.summary).toMatch(/could not retrieve/i);
     expect(kit.schedule.days).toHaveLength(1);
+  });
+});
+
+describe("company naming", () => {
+  it("takes the registrable label, not the subdomain", () => {
+    expect(brandFromHost("about.gitlab.com")).toBe("gitlab");
+    expect(brandFromHost("posthog.com")).toBe("posthog");
+    expect(brandFromHost("careers.example.co.uk")).toBe("example");
+    expect(brandFromHost("localhost")).toBe("localhost");
+  });
+  it("finds the company in a page title at either end, keeping the site's casing", () => {
+    expect(brandInTitle("Using AI in the interview process | GitLab", "gitlab")).toBe("GitLab");
+    expect(brandInTitle("GitLab | The DevSecOps platform", "gitlab")).toBe("GitLab");
+    expect(brandInTitle("Careers - PostHog", "posthog")).toBe("PostHog");
+  });
+  it("returns nothing when no title segment agrees with the domain", () => {
+    // Otherwise the company gets named after whichever page happened to be fetched first.
+    expect(brandInTitle("Using AI in the interview process", "gitlab")).toBe("");
+    expect(brandInTitle("How we hire | Acme Corp", "example")).toBe("");
+  });
+  it("takes a homepage company from the front of its title", () => {
+    expect(nameFromTitle("Acme Corp — Careers")).toBe("Acme Corp");
+    expect(nameFromTitle("Plain title")).toBe("Plain title");
   });
 });
