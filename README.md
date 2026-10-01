@@ -50,7 +50,8 @@ Order matters: the backend needs the database URL, and the frontend needs the ba
 1. **Database:** MongoDB Atlas free (M0) cluster. Create a database user, and under Network Access allow
    `0.0.0.0/0` (Render's free tier has no static egress IP). Copy the SRV connection string.
 2. **Backend:** Render > New > Blueprint, pointed at this repo: `render.yaml` sets the root directory, build and
-   start commands, and the health check. Render prompts for `MONGODB_URI`, `LLM_API_KEY` and `FRONTEND_ORIGIN`,
+   start commands, and the health check. The build runs `npm install --include=dev`, because `NODE_ENV=production`
+   otherwise makes npm skip the devDependencies that `tsc` needs. Render prompts for `MONGODB_URI`, `LLM_API_KEY` and `FRONTEND_ORIGIN`,
    and generates `JWT_SECRET` itself. Leave `FRONTEND_ORIGIN` blank until step 3, then fill it in.
 3. **Frontend:** Vercel, root directory `frontend`, env `API_URL=https://<your-render-service>.onrender.com`.
 4. Go back to Render and set `FRONTEND_ORIGIN` to the exact Vercel URL, scheme included. The CSRF origin check
