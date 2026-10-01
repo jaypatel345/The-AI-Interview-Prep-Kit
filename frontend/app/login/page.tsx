@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { api } from "../../lib/api";
+import { api, markSignedIn } from "../../lib/api";
 
 export default function LoginPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
@@ -15,6 +15,7 @@ export default function LoginPage() {
     setBusy(true); setError(null);
     try {
       await api(`/api/auth/${mode}`, { method: "POST", body: JSON.stringify({ email: f.get("email"), password: f.get("password") }) });
+      markSignedIn();
       location.href = "/kits";
     } catch (err) { setError((err as Error).message); setBusy(false); }
   }

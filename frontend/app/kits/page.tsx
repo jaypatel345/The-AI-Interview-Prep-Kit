@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { api, KitSummary } from "../../lib/api";
+import { api, clearSignedIn, KitSummary } from "../../lib/api";
 
 export default function KitsPage() {
   const [kits, setKits] = useState<KitSummary[] | null>(null);
@@ -43,7 +43,7 @@ export default function KitsPage() {
     <main className="mx-auto max-w-3xl px-4 py-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Your prep kits</h1>
-        <button onClick={async () => { await api("/api/auth/logout", { method: "POST" }); location.href = "/login"; }} className="text-sm underline">Log out</button>
+        <button onClick={async () => { await api("/api/auth/logout", { method: "POST" }); clearSignedIn(); location.href = "/login"; }} className="text-sm underline">Log out</button>
       </div>
 
       <form onSubmit={create} className="mt-6 space-y-3 rounded border border-stone-300 p-4">
